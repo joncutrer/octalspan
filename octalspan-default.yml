@@ -18,4 +18,4 @@ database:
   pass: "..."
 
 app:
-  debug: TRUE
+  debug: false
