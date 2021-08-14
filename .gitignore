@@ -1,5 +1,5 @@
-bin/*
-!bin/.gitkeep
+build/*
+!build/.gitkeep
 dist/*
 !dist/.gitkeep
 /log
