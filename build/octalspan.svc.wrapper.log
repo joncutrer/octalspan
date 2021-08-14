@@ -1,0 +1,18 @@
+2021-08-14 11:25:06,994 DEBUG - Starting WinSW in console mode
+2021-08-14 11:25:07,041 INFO  - Uninstalling service 'OctalSpan Syslog Server (octalspan)'...
+2021-08-14 11:25:07,051 WARN  - Service 'OctalSpan Syslog Server (octalspan)' does not exist.
+2021-08-14 11:25:13,916 DEBUG - Starting WinSW in console mode
+2021-08-14 11:25:13,948 INFO  - Installing service 'OctalSpan Syslog Server (octalspan)'...
+2021-08-14 11:25:13,979 INFO  - Service 'OctalSpan Syslog Server (octalspan)' was installed successfully.
+2021-08-14 11:25:23,350 DEBUG - Starting WinSW in service mode
+2021-08-14 11:25:23,479 INFO  - Starting c:\Users\joncu\OneDrive\dev\golang-apps\octalspan\bin\octalspan.syslogd.exe 
+2021-08-14 11:25:23,722 INFO  - Started process 9424
+2021-08-14 11:25:23,743 DEBUG - Forwarding logs of the process System.Diagnostics.Process (octalspan.syslogd) to WinSW.SizeBasedRollingLogAppender
+2021-08-14 11:40:37,631 INFO  - Stopping octalspan
+2021-08-14 11:40:37,632 DEBUG - ProcessKill 9424
+2021-08-14 11:40:37,639 DEBUG - Stopping process 9424...
+2021-08-14 11:40:37,650 DEBUG - Process 9424 canceled with code -1073741510.
+2021-08-14 11:40:37,655 INFO  - Finished octalspan
+2021-08-14 11:40:40,659 DEBUG - Starting WinSW in console mode
+2021-08-14 11:40:40,698 INFO  - Uninstalling service 'OctalSpan Syslog Server (octalspan)'...
+2021-08-14 11:40:40,706 INFO  - Service 'OctalSpan Syslog Server (octalspan)' was uninstalled successfully.
