@@ -10,6 +10,7 @@ import (
 	"github.com/eiannone/keyboard"
 	"github.com/fatih/color"
 
+	"github.com/go-co-op/gocron"
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/mcuadros/go-syslog.v2"
 	"gopkg.in/yaml.v2"
@@ -57,10 +58,84 @@ func main() {
 	// Config
 	readFile(&cfg)
 	readEnv(&cfg)
-	fmt.Printf("%+v", cfg)
+	//fmt.Printf("%+v", cfg)
 
+	//Log files init
 	touchLogFile()
 
+	//Scheduler init
+	schdlr := gocron.NewScheduler(time.UTC)
+	schdlr.StartAsync()
+
+	schdlr.Every(15).Seconds().Do(func() {
+		printStats()
+	})
+
+	mlc := make(chan string, 10) // main loop channel
+
+	//Print some info
+	appIntro()
+
+	// Start the syslogd server
+	go syslogServer()
+
+	// Start the keypress listener
+	go keyPressListener(mlc)
+	fmt.Println("Press ESC to quit")
+
+	// Main loop
+	for msg := range mlc {
+		fmt.Println("This is the main loop")
+		fmt.Println("main: " + msg)
+		switch msg {
+		case "shutdown":
+			os.Exit(0)
+		}
+	}
+
+}
+
+func keyPressListener(mlc chan string) {
+	//kplChan := make(chan string, 2) // keypress listener channel
+
+	// Keyboard setup
+	keysEvents, err := keyboard.GetKeys(1)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = keyboard.Close()
+	}()
+
+	for {
+		event := <-keysEvents
+		if event.Err != nil {
+			panic(event.Err)
+		}
+		fmt.Printf("You pressed: rune %q, key %X\r\n", event.Rune, event.Key)
+		if event.Key == keyboard.KeyEsc {
+			mlc <- "shutdown"
+			break
+		}
+	}
+
+	// for kplChan := range kplChan {
+	// 	fmt.Println("This is the keypresslistener loop")
+	// 	fmt.Println("kpl: " + kplChan)
+
+	// 	event := <-keysEvents
+	// 	if event.Err != nil {
+	// 		panic(event.Err)
+	// 	}
+	// 	fmt.Printf("You pressed: rune %q, key %X\r\n", event.Rune, event.Key)
+	// 	if event.Key == keyboard.KeyEsc {
+	// 		break
+	// 	}
+	// 	time.Sleep(1)
+	// }
+}
+
+func appIntro() {
 	// Print with default helper functions
 	d := color.New(color.FgCyan, color.Bold)
 	d.Printf("[octalspan]")
@@ -72,47 +147,6 @@ func main() {
 	m.Printf("%s:", cfg.Server.Host)
 	y.Printf("%s", cfg.Server.UdpPort)
 	fmt.Println("")
-
-	// testing timers
-
-	timer := time.AfterFunc(time.Second*time_in_seconds, func() {
-		fmt.Printf("Congratulations! Your %d second timer finished.", time_in_seconds)
-	})
-	defer timer.Stop()
-
-	// Start the syslogd server
-	go syslogServer()
-
-	// Keyboard setup
-	keysEvents, err := keyboard.GetKeys(1)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		_ = keyboard.Close()
-	}()
-
-	fmt.Println("Press ESC to quit")
-
-	// Main loop
-	for {
-		fmt.Println("Iterloop")
-
-		event := <-keysEvents
-		if event.Err != nil {
-			panic(event.Err)
-		}
-		fmt.Printf("You pressed: rune %q, key %X\r\n", event.Rune, event.Key)
-		if event.Key == keyboard.KeyEsc {
-			break
-		}
-
-		time.Sleep(1)
-		//wg := sync.WaitGroup{}
-		//wg.Add(1)
-		//wg.Wait()
-
-	}
 }
 
 func syslogServer() {
@@ -152,7 +186,7 @@ func syslogServer() {
 				f.Close()
 				return
 			}
-			totalBytesWritten = +l
+			totalBytesWritten += l
 			if cfg.App.Debug == "TRUE" {
 				fmt.Println(l, "bytes written successfully")
 			}
@@ -185,6 +219,12 @@ func syslogServer() {
 	}(channel)
 
 	server.Wait()
+}
+
+func printStats() {
+	d := color.New(color.FgCyan, color.Bold)
+	d.Printf("[octalspan] ")
+	fmt.Printf("%d bytes written to disk\n", totalBytesWritten)
 }
 
 // func for config and env loading
