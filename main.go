@@ -12,9 +12,12 @@ import (
 
 	"github.com/go-co-op/gocron"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/oleiade/lane"
 	"gopkg.in/mcuadros/go-syslog.v2"
 	"gopkg.in/yaml.v2"
 )
+
+var lastLog *lane.Deque
 
 type Config struct {
 	Server struct {
@@ -60,6 +63,9 @@ func main() {
 	readEnv(&cfg)
 	//fmt.Printf("%+v", cfg)
 
+	//Init lastLog Queue
+	lastLog = lane.NewCappedDeque(10)
+
 	//Log files init
 	touchLogFile()
 
@@ -67,29 +73,38 @@ func main() {
 	schdlr := gocron.NewScheduler(time.UTC)
 	schdlr.StartAsync()
 
-	schdlr.Every(15).Seconds().Do(func() {
+	schdlr.Every(60).Seconds().Do(func() {
 		printStats()
 	})
 
 	mlc := make(chan string, 10) // main loop channel
 
 	//Print some info
-	appIntro()
+	printIntro()
 
 	// Start the syslogd server
 	go syslogServer()
 
 	// Start the keypress listener
 	go keyPressListener(mlc)
-	fmt.Println("Press ESC to quit")
 
 	// Main loop
 	for msg := range mlc {
-		fmt.Println("This is the main loop")
-		fmt.Println("main: " + msg)
+		//fmt.Println("This is the main loop")
+		//fmt.Println("main: " + msg)
 		switch msg {
 		case "shutdown":
 			os.Exit(0)
+		case "showstats":
+			printStats()
+
+		case "showinfo":
+			fmt.Println("TODO: show info")
+		case "dump":
+			printLastLog()
+			// case "peek":
+			// 	fmt.Println(lastLog.Full())
+			//
 		}
 	}
 
@@ -99,7 +114,7 @@ func keyPressListener(mlc chan string) {
 	//kplChan := make(chan string, 2) // keypress listener channel
 
 	// Keyboard setup
-	keysEvents, err := keyboard.GetKeys(1)
+	keysEvents, err := keyboard.GetKeys(2)
 	if err != nil {
 		panic(err)
 	}
@@ -107,15 +122,30 @@ func keyPressListener(mlc chan string) {
 		_ = keyboard.Close()
 	}()
 
+	fmt.Println("Press [CTRL]+[X] to quit, [i] for info, [s] for stats, [d] dump last 10 log lines")
+
 	for {
 		event := <-keysEvents
 		if event.Err != nil {
 			panic(event.Err)
 		}
-		fmt.Printf("You pressed: rune %q, key %X\r\n", event.Rune, event.Key)
-		if event.Key == keyboard.KeyEsc {
+		//fmt.Printf("You pressed: rune %q, key %X\r\n", event.Rune, event.Key)
+		if event.Key == keyboard.KeyCtrlX {
 			mlc <- "shutdown"
 			break
+		}
+
+		if event.Rune == 'i' {
+			mlc <- "showinfo"
+		}
+		if event.Rune == 's' {
+			mlc <- "showstats"
+		}
+		if event.Rune == 'd' {
+			mlc <- "dump"
+		}
+		if event.Rune == 'p' {
+			mlc <- "peek"
 		}
 	}
 
@@ -135,18 +165,29 @@ func keyPressListener(mlc chan string) {
 	// }
 }
 
-func appIntro() {
+func printIntro() {
 	// Print with default helper functions
 	d := color.New(color.FgCyan, color.Bold)
-	d.Printf("[octalspan]")
-	fmt.Printf(" syslog server starting...\n")
-	d.Printf("[octalspan]")
-	fmt.Printf(" Listening on ")
+	d.Printf("[octalspan] ")
+	fmt.Printf("syslog server starting...\n")
+	d.Printf("[octalspan] ")
+	fmt.Printf("Listening on ")
 	m := color.New(color.FgMagenta)
 	y := color.New(color.FgYellow)
 	m.Printf("%s:", cfg.Server.Host)
 	y.Printf("%s", cfg.Server.UdpPort)
 	fmt.Println("")
+}
+
+func printLastLog() {
+	var logLines []string = make([]string, lastLog.Size())
+
+	for i := 0; i < len(logLines); i++ {
+		value := lastLog.Shift()
+		logLines[i] = value.(string)
+	}
+
+	fmt.Println(strings.Join(logLines, "\n"))
 }
 
 func syslogServer() {
@@ -179,7 +220,11 @@ func syslogServer() {
 			hostIP := getIPAddr(logParts["client"].(string))
 
 			logLine := fmt.Sprintf("%v - %v - %v", logParts["timestamp"], hostIP, logParts["content"])
+			// Write log line to file
 			l, err = fmt.Fprintln(f, logLine)
+
+			// Add log line to lastLog queue
+			lastLog.Append(logLine)
 
 			if err != nil {
 				fmt.Println(err)
