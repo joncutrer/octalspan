@@ -4,3 +4,4 @@ dist/*
 !dist/.gitkeep
 /log
 *.syso
+/svc/*.exe
