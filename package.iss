@@ -21,10 +21,10 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\octalspan
 DisableDirPage=yes
 DisableProgramGroupPage=yes
-LicenseFile=C:\Users\joncu\OneDrive\dev\golang-apps\octalspan\LICENSE
+LicenseFile=LICENSE
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
-OutputDir=C:\Users\joncu\OneDrive\dev\golang-apps\octalspan\dist
+OutputDir=dist
 OutputBaseFilename=octalspan-{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
@@ -37,9 +37,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\joncu\OneDrive\dev\golang-apps\octalspan\bin\octalspan.syslogd.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\joncu\OneDrive\dev\golang-apps\octalspan\bin\octalspan.yml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\joncu\OneDrive\dev\golang-apps\octalspan\bin\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bin\octalspan.syslogd.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bin\octalspan.yml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bin\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 ; Source: "C:\Users\joncu\OneDrive\dev\golang-apps\octalspan\bin\*"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
