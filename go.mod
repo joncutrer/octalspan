@@ -6,6 +6,7 @@ require (
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/go-co-op/gocron v1.6.2 // indirect
+	github.com/judwhite/go-svc v1.2.1
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
 	github.com/oleiade/lane v1.0.1 // indirect
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0 // indirect
